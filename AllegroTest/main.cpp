@@ -1,15 +1,6 @@
-/*
-* This program uses the Allegro game library to display a blank window.
-*
-* It initializes the display and starts up the main game loop. The
-* game loop only checks for two events: timer (determined by the FPS)
-* and display close (when the user tries to close the window).
-*
-* http://www.damienradtke.org/building-a-mario-clone-with-allegro
-*/
-
-#include <stdio.h>
+#include <iostream>
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
 
 const float FPS = 60;
 
@@ -18,34 +9,41 @@ int main(int argc, char *argv[])
 	ALLEGRO_DISPLAY *display = NULL;
 	ALLEGRO_EVENT_QUEUE *event_queue = NULL;
 	ALLEGRO_TIMER *timer = NULL;
+	ALLEGRO_COLOR al_color;
 
 	bool running = true;
 	bool redraw = true;
 
 	// Initialize allegro
 	if (!al_init()) {
-		fprintf(stderr, "Failed to initialize allegro.\n");
+		std::cout << stderr << "Failed to initialize allegro.\n";
+		return 1;
+	}
+
+	// Initialize Addons
+	if (!al_init_primitives_addon()){
+		std::cout << stderr << "Failed to initialize primitives addon.\n";
 		return 1;
 	}
 
 	// Initialize the timer
 	timer = al_create_timer(1.0 / FPS);
 	if (!timer) {
-		fprintf(stderr, "Failed to create timer.\n");
+		std::cout << stderr << "Failed to create timer.\n";
 		return 1;
 	}
 
 	// Create the display
 	display = al_create_display(640, 480);
 	if (!display) {
-		fprintf(stderr, "Failed to create display.\n");
+		std::cout << stderr << "Failed to create display.\n";
 		return 1;
 	}
 
 	// Create the event queue
 	event_queue = al_create_event_queue();
 	if (!event_queue) {
-		fprintf(stderr, "Failed to create event queue.");
+		std::cout << stderr << "Failed to create event queue.";
 		return 1;
 	}
 
@@ -71,6 +69,8 @@ int main(int argc, char *argv[])
 		// Fetch the event (if one exists)
 		bool get_event = al_wait_for_event_until(event_queue, &event, &timeout);
 
+		al_draw_pixel(100, 100, al_color);
+
 		// Handle the event
 		if (get_event) {
 			switch (event.type) {
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 				running = false;
 				break;
 			default:
-				fprintf(stderr, "Unsupported event received: %d\n", event.type);
+				std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
 				break;
 			}
 		}
