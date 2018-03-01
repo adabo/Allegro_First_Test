@@ -3,7 +3,7 @@
 
 # User-specific files
 main.cpp.old2
-newmain.cpp
+main.cpp.old
 *.suo
 *.user
 *.userosscache
