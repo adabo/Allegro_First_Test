@@ -5,7 +5,7 @@
 class Game
 {
 public:
-	Game();
+	~Game();
 	Game(bool Is_running, bool Can_draw);
 	void init_game_engine();
 	void init_timer();
@@ -23,7 +23,14 @@ public:
 	void draw();
 	void cleanup();
 
-	bool is_running;
+	void draw_player();
+
+	struct Player{
+		//Player(int x_pos, int y_pos);
+		float x, y;
+	}player;
+	
+	bool game_is_running;
 	bool can_redraw;
 	int return_value;
 	const float FPS = 60;

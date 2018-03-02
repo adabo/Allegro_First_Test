@@ -1,12 +1,14 @@
 #include "game.h"
 
 Game::Game(bool Is_running, bool Can_draw)
-	: 	is_running(Is_running),
-		can_redraw(Can_draw)
+	: 	game_is_running(Is_running),
+		can_redraw(Can_draw),
+		player()
 {
+	player.x = 200; player.y = 200;
 }
 
-Game::Game()
+Game::~Game()
 {
 }
 
@@ -98,10 +100,6 @@ void Game::init_timeout()
 	al_init_timeout(&timeout, 0.06);
 }
 
-void Game::init_game_engine()
-{
-}
-
 void Game::handle_events()
 {
 	// Fetch the event (if one exists)
@@ -114,7 +112,7 @@ void Game::handle_events()
 			can_redraw = true;
 			break;
 		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			is_running = false;
+			game_is_running = false;
 			break;
 		default:
 			std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
@@ -125,12 +123,12 @@ void Game::handle_events()
 
 void Game::go()
 {
+	init_timeout();
+	handle_events();
 	// Check if we need to redraw
 	if (can_redraw && al_is_event_queue_empty(event_queue)) {
 		// Redraw
-		al_clear_to_color(al_map_rgb(0, 0, 0));
 		draw();
-		al_flip_display();
 		can_redraw = false;
 	}
 }
@@ -141,10 +139,20 @@ void Game::update()
 
 void Game::draw()
 {
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	draw_player();
+	al_flip_display();
+}
+
+void Game::draw_player()
+{
+	for (int i = 0; i < 40; i++){
+		al_draw_pixel(player.x, player.y, al_map_rgb(255, 255, 255));
+	}
 }
 
 void Game::cleanup()
 {
-al_destroy_display(display);
-al_destroy_event_queue(event_queue);
+	al_destroy_display(display);
+	al_destroy_event_queue(event_queue);
 }
