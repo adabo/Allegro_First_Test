@@ -9,15 +9,15 @@ int main(int argc, char *argv[])
 	game.init_timer();
 	game.start_timer();
 	game.init_display();
+	game.init_addons();
 	game.create_event_queue();
 	game.register_event_sources();
-	game.init_addons();
-	game.display_screen();
-	game.go();
+	//game.display_screen();
 
 	// Game loop
 	while (game.game_is_running) {
-		game.go();
+		game.init_timeout();
+		game.handle_events();
 		game.update();
 		game.draw();
 	}
