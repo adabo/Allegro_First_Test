@@ -9,10 +9,10 @@
 class Game
 {
 public:
-	struct Player{
-		//Player(int x_pos, int y_pos);
+	struct Entity {
+		//Entity(int x_pos, int y_pos);
 		float x, y;
-	}player;
+	}player, target;
 	
 	~Game();
 	Game(bool Is_running, bool Can_draw);
@@ -27,13 +27,14 @@ public:
 	void init_addons();
 	void display_screen();
 	void handle_events();
-	void handle_key_press(int key_code, Player *player_pos);
+	void handle_key_press(int key_code, Entity *player_pos);
+	void handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *player_pos);
 	void update();
 	void draw();
 	float undulate_color(float *color);
 	void cleanup();
-	bool player_is_out_of_bounds(Player *player_pos);
-	void clamp_player_to_screen(Player *player);
+	bool player_is_out_of_bounds(Entity *player_pos);
+	void clamp_player_to_screen(Entity *player);
 
 	void draw_player();
 

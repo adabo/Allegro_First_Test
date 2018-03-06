@@ -41,6 +41,13 @@ void Game::init_addons()
 	else {
 		std::cout << stderr << " al_install_keyboard() Success.";
 	}
+	if (!al_install_mouse()) {
+		std::cout << stderr << " Failed to install keyboard.\n";
+		return_value =  1;
+	}
+	else {
+		std::cout << stderr << " al_install_keyboard() Success.";
+	}
 }
 
 void Game::init_timer()
@@ -84,6 +91,7 @@ void Game::register_event_sources()
 	al_register_event_source(event_queue, al_get_display_event_source(display));
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
+	al_register_event_source(event_queue, al_get_mouse_event_source());
 }
 
 void Game::start_timer()
@@ -110,13 +118,26 @@ void Game::handle_events()
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			handle_key_press(event.keyboard.keycode, &player);
+			break;
+		case ALLEGRO_EVENT_MOUSE_AXES:
+			handle_mouse_action(event, &target);
+			//std::cout << "Mouse x: " << event.mouse.x << std::endl;
+			//std::cout << "Mouse y: " << event.mouse.y << std::endl;
+			//std::cout << "Mouse z: " << event.mouse.z << std::endl;
+			//std::cout << "Mouse w: " << event.mouse.w << std::endl;
+			//std::cout << "Mouse dx: " << event.mouse.dx << std::endl;
+			//std::cout << "Mouse dy: " << event.mouse.dy << std::endl;
+			//std::cout << "Mouse dz: " << event.mouse.dz << std::endl;
+			//std::cout << "Mouse dw: " << event.mouse.dw << std::endl;
+			//std::cout << "Mouse pressure: " << event.mouse.pressure << std::endl;
+			break;
 		default:
 			std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
 			break;
 	}
 }
 
-void Game::handle_key_press(int key_code, Player *player_pos)
+void Game::handle_key_press(int key_code, Entity *player_pos)
 {
 	float x_move = 10;
 	float y_move = 10;
@@ -147,7 +168,13 @@ void Game::handle_key_press(int key_code, Player *player_pos)
 	}
 }
 
-void Game::clamp_player_to_screen(Player *player)
+void Game::handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *target_pos)
+{
+	target_pos->x = mouse_event.mouse.x;
+	target_pos->y = mouse_event.mouse.y;
+}
+
+void Game::clamp_player_to_screen(Entity *player)
 {
 	if (player->x < 1) 			   player->x = 1;
 	if (player->x > SCREEN_WIDTH)  player->x = SCREEN_WIDTH - 1;
@@ -171,11 +198,11 @@ void Game::draw_player()
 {
 
 	Vector2d player_vector(player.x, player.y);
-	Vector2d goal(799, 599);
+	Vector2d target_vector(target.x, target.y);
 	// If you imagine cartesian, x -> and y ^ of a triangle
 	// This Vector2d overload takes two vectors and subtracts their components
-	// (goal.x - player.x, goal.y - player.y)
-	Vector2d side_AB(player_vector, goal);
+	// (target.x - player.x, target.y - player.y)
+	Vector2d side_AB(player_vector, target_vector);
 	Vector2d line(side_AB.x, side_AB.y); // Magnitude, or hypotenuse
 	float distance = line.get_distance();
 	line.get_normal(distance);
@@ -184,7 +211,7 @@ void Game::draw_player()
 	 * line to start from, like a projectile*/
 	line.x = player.x;
 	line.y = player.y;
-	// Draw the line extending from player to goal
+	// Draw the line extending from player to target
 	for (int length = 0; length < 80; length++) {
 		line.x += line.normal_x;
 		line.y += line.normal_y;
@@ -224,7 +251,7 @@ float Game::undulate_color(float *color)
 	return *color;
 }
 
-bool Game::player_is_out_of_bounds(Player *player_pos)
+bool Game::player_is_out_of_bounds(Entity *player_pos)
 {
 	if (player_pos->x < 1) return true;
 	else if (player_pos->x > SCREEN_WIDTH) return true;
