@@ -2,8 +2,7 @@
 #include "Vector2d.h"
 
 Game::Game(bool Is_running, bool Can_draw)
-	:	key_was_pressed(false),
-	 	game_is_running(Is_running),
+	:	game_is_running(Is_running),
 		can_redraw(Can_draw)
 		//player()
 {
@@ -43,13 +42,13 @@ void Game::init_addons()
 	else {
 		std::cout << stderr << " al_install_keyboard() Success.";
 	}
-	//if (!al_install_mouse()) {
-	//	std::cout << stderr << " Failed to install mouse.\n";
-	//	return_value =  1;
-	//}
-	//else {
-	//	std::cout << stderr << " al_install_mouse() Success.";
-	//}
+	if (!al_install_mouse()) {
+		std::cout << stderr << " Failed to install mouse.\n";
+		return_value =  1;
+	}
+	else {
+		std::cout << stderr << " al_install_mouse() Success.";
+	}
 }
 
 void Game::init_timer()
@@ -93,7 +92,7 @@ void Game::register_event_sources()
 	al_register_event_source(event_queue, al_get_display_event_source(display));
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
-	//al_register_event_source(event_queue, al_get_mouse_event_source());
+	al_register_event_source(event_queue, al_get_mouse_event_source());
 }
 
 void Game::start_timer()
@@ -119,18 +118,17 @@ void Game::handle_events()
 			game_is_running = false;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
-			key_was_pressed = true;
+			std::cout << "A key was Pressed: "<< event.keyboard.keycode << std::endl;
 			store_key_state();
 			break;
 		case ALLEGRO_EVENT_KEY_UP:
-			key_was_pressed = false;
 			store_key_state();
 			break;
-		//case ALLEGRO_EVENT_MOUSE_AXES:
-		handle_mouse_action(event, &target);
-		//	break;
+		case ALLEGRO_EVENT_MOUSE_AXES:
+			handle_mouse_action(event, &target);
+			break;
 		default:
-			std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
+			std::cout << stderr << " Unsupported event received: " << event.type << std::endl;
 			break;
 	}
 	
@@ -176,10 +174,10 @@ void Game::store_key_state()
 
 void Game::handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *target_pos)
 {
-	//target_pos->x = mouse_event.mouse.x;
-	//target_pos->y = mouse_event.mouse.y;
-	target_pos->x = 799;
-	target_pos->y = 599;
+	target_pos->x = mouse_event.mouse.x;
+	target_pos->y = mouse_event.mouse.y;
+	//target_pos->x = 799;
+	//target_pos->y = 599;
 }
 
 void Game::clamp_player_to_screen(Entity *player)

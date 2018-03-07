@@ -1,6 +1,5 @@
 #include "game.h"
 
-
 int main(int argc, char *argv[])
 {
 	Game game(true, false);
@@ -12,7 +11,6 @@ int main(int argc, char *argv[])
 	game.init_addons();
 	game.create_event_queue();
 	game.register_event_sources();
-	//game.display_screen();
 
 	// Game loop
 	while (game.game_is_running) {
@@ -20,7 +18,7 @@ int main(int argc, char *argv[])
 		game.handle_events();
 		game.update();
 		game.draw();
-		}
+	}
 
 	game.cleanup();
 
