@@ -141,8 +141,7 @@ void Game::handle_key_press()
 	if (s_key_is_down) player.y += player.y_speed;
 	if (a_key_is_down) player.x -= player.x_speed;
 	if (d_key_is_down) player.x += player.x_speed;
-	if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-		game_is_running = false;
+	if (esc_key_is_down) game_is_running = false;
 	//if (t_was_pressed) t_toggle = !t_toggle;
 
 	if (player_is_out_of_bounds(&player)) {
@@ -157,7 +156,7 @@ void Game::store_key_state()
 			case ALLEGRO_KEY_S: s_key_is_down = true; break;
 			case ALLEGRO_KEY_A: a_key_is_down = true; break;
 			case ALLEGRO_KEY_D: d_key_is_down = true; break;
-			case ALLEGRO_KEY_ESCAPE: game_is_running = false; break;
+			case ALLEGRO_KEY_ESCAPE: esc_key_is_down = true; break;
 			default: break;
 		}
 	}
@@ -167,6 +166,7 @@ void Game::store_key_state()
 			case ALLEGRO_KEY_S: s_key_is_down = false; break;
 			case ALLEGRO_KEY_A: a_key_is_down = false; break;
 			case ALLEGRO_KEY_D: d_key_is_down = false; break;
+			case ALLEGRO_KEY_ESCAPE: esc_key_is_down = false; break;
 			default: break;
 		}
 	}

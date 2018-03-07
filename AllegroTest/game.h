@@ -42,6 +42,7 @@ public:
 	bool s_key_is_down;
 	bool a_key_is_down;
 	bool d_key_is_down;
+	bool esc_key_is_down;
 	bool t_toggle;
 	bool t_is_pressed;
 	bool game_is_running;
