@@ -110,6 +110,8 @@ void Game::handle_events()
 	// Fetch the event (if one exists)
 	al_wait_for_event(event_queue, &event);
 
+	al_get_keyboard_state(&current_state);
+
 	switch (event.type) {
 		case ALLEGRO_EVENT_TIMER:
 			can_redraw = true;
@@ -118,14 +120,10 @@ void Game::handle_events()
 			game_is_running = false;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
-			key_was_pressed = true;
-			last_key_pressed = event.keyboard.keycode;
 			handle_key_press(event.keyboard.keycode, &player);
 			break;
-		case ALLEGRO_EVENT_KEY_UP:
-			key_was_pressed = false;
-			//handle_key_press(event.keyboard.keycode, &player);
-			break;
+		//case ALLEGRO_EVENT_KEY_UP:
+		//	break;
 		case ALLEGRO_EVENT_MOUSE_AXES:
 			handle_mouse_action(event, &target);
 			break;
@@ -144,7 +142,7 @@ void Game::handle_key_press(int key_code, Entity *player_pos)
 	//if (key_was_pressed) last_key_pressed = key_code;
 
 	
-	switch(last_key_pressed) {
+	switch(key_code) {
 		case ALLEGRO_KEY_W:
 			player_pos->y -= y_move;
 			break;
@@ -165,7 +163,7 @@ void Game::handle_key_press(int key_code, Entity *player_pos)
 			game_is_running = false;
 			break;
 		default:
-			std::cout << "Unrecognized key.\n";
+			//std::cout << "Unrecognized key.\n";
 			break;
 	}
 
@@ -202,7 +200,7 @@ void Game::draw()
 
 void Game::draw_player()
 {
-
+/*
 	Vector2d player_vector(player.x, player.y);
 	Vector2d target_vector(target.x, target.y);
 	// If you imagine cartesian, x -> and y ^ of a triangle
@@ -213,15 +211,17 @@ void Game::draw_player()
 	float distance = line.get_distance();
 	line.get_normal(distance);
 
-	/* Set line's origin to the player's position since that's where we want the
-	 * line to start from, like a projectile*/
+	// Set line's origin to the player's position since that's where we want the
+	// line to start from, like a projectile
 	line.x = player.x;
 	line.y = player.y;
+*/
 	// Draw the line extending from player to target
 	for (int length = 0; length < 80; length++) {
-		line.x += line.normal_x;
-		line.y += line.normal_y;
-		al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
+		//line.x += line.normal_x;
+		//line.y += line.normal_y;
+		//al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
+		al_draw_pixel(player.x + length, player.y + length, al_map_rgb(0, 255, 0));
 	}
 
 	/*

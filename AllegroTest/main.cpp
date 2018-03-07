@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 		game.handle_events();
 		game.update();
 		game.draw();
-	}
+		}
 
 	game.cleanup();
 

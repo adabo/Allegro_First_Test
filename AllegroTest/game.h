@@ -46,6 +46,7 @@ public:
 	bool can_redraw;
 	int return_value;
 	const float FPS = 60;
+	ALLEGRO_KEYBOARD_STATE current_state;
 	ALLEGRO_EVENT event;
 	ALLEGRO_TIMEOUT timeout;
 	ALLEGRO_DISPLAY *display = NULL;
