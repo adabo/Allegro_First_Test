@@ -16,7 +16,7 @@ public:
 	
 	~Game();
 	Game(bool Is_running, bool Can_draw);
-	void init_game_engine();
+	//void init_game_engine();
 	void init_timer();
 	void init_timeout();
 	void init_display();
@@ -25,7 +25,7 @@ public:
 	void register_event_sources();
 	void init_allegro();
 	void init_addons();
-	void display_screen();
+	//void display_screen();
 	void handle_events();
 	void handle_key_press(int key_code, Entity *player_pos);
 	void handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *player_pos);
@@ -38,6 +38,10 @@ public:
 
 	void draw_player();
 
+	int last_key_pressed;
+	bool key_was_pressed;
+	bool t_toggle;
+	bool t_is_pressed;
 	bool game_is_running;
 	bool can_redraw;
 	int return_value;

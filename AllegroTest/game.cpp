@@ -2,7 +2,8 @@
 #include "Vector2d.h"
 
 Game::Game(bool Is_running, bool Can_draw)
-	: 	game_is_running(Is_running),
+	:	key_was_pressed(false),
+	 	game_is_running(Is_running),
 		can_redraw(Can_draw)
 		//player()
 {
@@ -117,43 +118,48 @@ void Game::handle_events()
 			game_is_running = false;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
+			key_was_pressed = true;
+			last_key_pressed = event.keyboard.keycode;
 			handle_key_press(event.keyboard.keycode, &player);
+			break;
+		case ALLEGRO_EVENT_KEY_UP:
+			key_was_pressed = false;
+			//handle_key_press(event.keyboard.keycode, &player);
 			break;
 		case ALLEGRO_EVENT_MOUSE_AXES:
 			handle_mouse_action(event, &target);
-			//std::cout << "Mouse x: " << event.mouse.x << std::endl;
-			//std::cout << "Mouse y: " << event.mouse.y << std::endl;
-			//std::cout << "Mouse z: " << event.mouse.z << std::endl;
-			//std::cout << "Mouse w: " << event.mouse.w << std::endl;
-			//std::cout << "Mouse dx: " << event.mouse.dx << std::endl;
-			//std::cout << "Mouse dy: " << event.mouse.dy << std::endl;
-			//std::cout << "Mouse dz: " << event.mouse.dz << std::endl;
-			//std::cout << "Mouse dw: " << event.mouse.dw << std::endl;
-			//std::cout << "Mouse pressure: " << event.mouse.pressure << std::endl;
 			break;
 		default:
 			std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
 			break;
 	}
+	
+	if (key_was_pressed) handle_key_press(last_key_pressed, &player);
 }
 
 void Game::handle_key_press(int key_code, Entity *player_pos)
 {
 	float x_move = 10;
 	float y_move = 10;
+	//if (key_was_pressed) last_key_pressed = key_code;
 
-	switch(key_code) {
-		case ALLEGRO_KEY_UP:
+	
+	switch(last_key_pressed) {
+		case ALLEGRO_KEY_W:
 			player_pos->y -= y_move;
 			break;
-		case ALLEGRO_KEY_DOWN:
+		case ALLEGRO_KEY_S:
 			player_pos->y += y_move;
 			break;
-		case ALLEGRO_KEY_LEFT:
+		case ALLEGRO_KEY_A:
 			player_pos->x -= x_move;
 			break;
-		case ALLEGRO_KEY_RIGHT:
+		case ALLEGRO_KEY_D:
 			player_pos->x += x_move;
+			break;
+		case ALLEGRO_KEY_T:
+			if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+				t_toggle = !t_toggle;
 			break;
 		case ALLEGRO_KEY_ESCAPE:
 			game_is_running = false;
