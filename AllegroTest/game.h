@@ -12,6 +12,7 @@ public:
 	struct Entity {
 		//Entity(int x_pos, int y_pos);
 		float x, y;
+		float x_speed, y_speed;
 	}player, target;
 	
 	~Game();
@@ -27,8 +28,9 @@ public:
 	void init_addons();
 	//void display_screen();
 	void handle_events();
-	void handle_key_press(int key_code, Entity *player_pos);
+	void handle_key_press();
 	void handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *player_pos);
+	void store_key_state();
 	void update();
 	void draw();
 	float undulate_color(float *color);
@@ -39,6 +41,10 @@ public:
 	void draw_player();
 
 	int last_key_pressed;
+	bool w_key_is_down;
+	bool s_key_is_down;
+	bool a_key_is_down;
+	bool d_key_is_down;
 	bool key_was_pressed;
 	bool t_toggle;
 	bool t_is_pressed;

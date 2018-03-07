@@ -8,6 +8,7 @@ Game::Game(bool Is_running, bool Can_draw)
 		//player()
 {
 	player.x = 200; player.y = 200;
+	player.x_speed = 10; player.y_speed = 10;
 }
 
 Game::~Game()
@@ -42,13 +43,13 @@ void Game::init_addons()
 	else {
 		std::cout << stderr << " al_install_keyboard() Success.";
 	}
-	if (!al_install_mouse()) {
-		std::cout << stderr << " Failed to install keyboard.\n";
-		return_value =  1;
-	}
-	else {
-		std::cout << stderr << " al_install_keyboard() Success.";
-	}
+	//if (!al_install_mouse()) {
+	//	std::cout << stderr << " Failed to install mouse.\n";
+	//	return_value =  1;
+	//}
+	//else {
+	//	std::cout << stderr << " al_install_mouse() Success.";
+	//}
 }
 
 void Game::init_timer()
@@ -92,7 +93,7 @@ void Game::register_event_sources()
 	al_register_event_source(event_queue, al_get_display_event_source(display));
 	al_register_event_source(event_queue, al_get_timer_event_source(timer));
 	al_register_event_source(event_queue, al_get_keyboard_event_source());
-	al_register_event_source(event_queue, al_get_mouse_event_source());
+	//al_register_event_source(event_queue, al_get_mouse_event_source());
 }
 
 void Game::start_timer()
@@ -110,8 +111,6 @@ void Game::handle_events()
 	// Fetch the event (if one exists)
 	al_wait_for_event(event_queue, &event);
 
-	al_get_keyboard_state(&current_state);
-
 	switch (event.type) {
 		case ALLEGRO_EVENT_TIMER:
 			can_redraw = true;
@@ -120,62 +119,67 @@ void Game::handle_events()
 			game_is_running = false;
 			break;
 		case ALLEGRO_EVENT_KEY_DOWN:
-			handle_key_press(event.keyboard.keycode, &player);
+			key_was_pressed = true;
+			store_key_state();
 			break;
-		//case ALLEGRO_EVENT_KEY_UP:
+		case ALLEGRO_EVENT_KEY_UP:
+			key_was_pressed = false;
+			store_key_state();
+			break;
+		//case ALLEGRO_EVENT_MOUSE_AXES:
+		handle_mouse_action(event, &target);
 		//	break;
-		case ALLEGRO_EVENT_MOUSE_AXES:
-			handle_mouse_action(event, &target);
-			break;
 		default:
 			std::cout << stderr << "Unsupported event received: " << event.type << std::endl;
 			break;
 	}
 	
-	if (key_was_pressed) handle_key_press(last_key_pressed, &player);
+	handle_key_press();
 }
 
-void Game::handle_key_press(int key_code, Entity *player_pos)
+void Game::handle_key_press()
 {
-	float x_move = 10;
-	float y_move = 10;
-	//if (key_was_pressed) last_key_pressed = key_code;
-
-	
-	switch(key_code) {
-		case ALLEGRO_KEY_W:
-			player_pos->y -= y_move;
-			break;
-		case ALLEGRO_KEY_S:
-			player_pos->y += y_move;
-			break;
-		case ALLEGRO_KEY_A:
-			player_pos->x -= x_move;
-			break;
-		case ALLEGRO_KEY_D:
-			player_pos->x += x_move;
-			break;
-		case ALLEGRO_KEY_T:
-			if (event.type == ALLEGRO_EVENT_KEY_DOWN)
-				t_toggle = !t_toggle;
-			break;
-		case ALLEGRO_KEY_ESCAPE:
-			game_is_running = false;
-			break;
-		default:
-			//std::cout << "Unrecognized key.\n";
-			break;
-	}
+	if (w_key_is_down) player.y -= player.y_speed;
+	if (s_key_is_down) player.y += player.y_speed;
+	if (a_key_is_down) player.x -= player.x_speed;
+	if (d_key_is_down) player.x += player.x_speed;
+	if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+		game_is_running = false;
+	//if (t_was_pressed) t_toggle = !t_toggle;
 
 	if (player_is_out_of_bounds(&player)) {
 		clamp_player_to_screen(&player);
 	}
 }
+void Game::store_key_state()
+{
+	if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+		switch (event.keyboard.keycode) {
+			case ALLEGRO_KEY_W: w_key_is_down = true; break;
+			case ALLEGRO_KEY_S: s_key_is_down = true; break;
+			case ALLEGRO_KEY_A: a_key_is_down = true; break;
+			case ALLEGRO_KEY_D: d_key_is_down = true; break;
+			case ALLEGRO_KEY_ESCAPE: game_is_running = false; break;
+			default: break;
+		}
+	}
+	if (event.type == ALLEGRO_EVENT_KEY_UP) {
+		switch (event.keyboard.keycode) {
+			case ALLEGRO_KEY_W: w_key_is_down = false; break;
+			case ALLEGRO_KEY_S: s_key_is_down = false; break;
+			case ALLEGRO_KEY_A: a_key_is_down = false; break;
+			case ALLEGRO_KEY_D: d_key_is_down = false; break;
+			default: break;
+		}
+	}
+}
 
 void Game::handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *target_pos)
 {
-	target_pos->x = mouse_event.mouse.x;
-	target_pos->y = mouse_event.mouse.y;
+	//target_pos->x = mouse_event.mouse.x;
+	//target_pos->y = mouse_event.mouse.y;
+	target_pos->x = 799;
+	target_pos->y = 599;
 }
 
 void Game::clamp_player_to_screen(Entity *player)
@@ -200,9 +204,9 @@ void Game::draw()
 
 void Game::draw_player()
 {
-/*
 	Vector2d player_vector(player.x, player.y);
 	Vector2d target_vector(target.x, target.y);
+
 	// If you imagine cartesian, x -> and y ^ of a triangle
 	// This Vector2d overload takes two vectors and subtracts their components
 	// (target.x - player.x, target.y - player.y)
@@ -215,13 +219,12 @@ void Game::draw_player()
 	// line to start from, like a projectile
 	line.x = player.x;
 	line.y = player.y;
-*/
+
 	// Draw the line extending from player to target
 	for (int length = 0; length < 80; length++) {
-		//line.x += line.normal_x;
-		//line.y += line.normal_y;
-		//al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
-		al_draw_pixel(player.x + length, player.y + length, al_map_rgb(0, 255, 0));
+		line.x += line.normal_x;
+		line.y += line.normal_y;
+		al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
 	}
 
 	/*
