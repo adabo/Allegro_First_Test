@@ -8,6 +8,8 @@ Game::Game(bool Is_running, bool Can_draw)
 {
 	player.x = 200; player.y = 200;
 	player.x_speed = 10; player.y_speed = 10;
+
+	projectile.x_speed = 10; projectile.y_speed = 10;
 }
 
 Game::~Game()
@@ -111,22 +113,16 @@ void Game::handle_events()
 	al_wait_for_event(event_queue, &event);
 
 	switch (event.type) {
-		case ALLEGRO_EVENT_TIMER:
-			can_redraw = true;
-			break;
-		case ALLEGRO_EVENT_DISPLAY_CLOSE:
-			game_is_running = false;
-			break;
+		case ALLEGRO_EVENT_TIMER: can_redraw = true; break;
+		case ALLEGRO_EVENT_DISPLAY_CLOSE: game_is_running = false; break;
 		case ALLEGRO_EVENT_KEY_DOWN:
 			std::cout << "A key was Pressed: "<< event.keyboard.keycode << std::endl;
 			store_key_state();
 			break;
-		case ALLEGRO_EVENT_KEY_UP:
-			store_key_state();
-			break;
-		case ALLEGRO_EVENT_MOUSE_AXES:
-			handle_mouse_action(event, &target);
-			break;
+		case ALLEGRO_EVENT_KEY_UP: store_key_state(); break;
+		case ALLEGRO_EVENT_MOUSE_AXES: handle_mouse_action(); return;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN: handle_mouse_action(); break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_UP: handle_mouse_action(); break;
 		default:
 			std::cout << stderr << " Unsupported event received: " << event.type << std::endl;
 			break;
@@ -144,9 +140,6 @@ void Game::handle_key_press()
 	if (esc_key_is_down) game_is_running = false;
 	//if (t_was_pressed) t_toggle = !t_toggle;
 
-	if (player_is_out_of_bounds(&player)) {
-		clamp_player_to_screen(&player);
-	}
 }
 void Game::store_key_state()
 {
@@ -172,35 +165,56 @@ void Game::store_key_state()
 	}
 }
 
-void Game::handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *target_pos)
+void Game::handle_mouse_action()
 {
-	target_pos->x = mouse_event.mouse.x;
-	target_pos->y = mouse_event.mouse.y;
-	//target_pos->x = 799;
-	//target_pos->y = 599;
+	switch(event.type) {
+		case ALLEGRO_EVENT_MOUSE_AXES:
+			target.x = event.mouse.x;
+			target.y = event.mouse.y;
+			break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+			projectile.count++;
+			projectile.x = player.x;
+			projectile.y = player.y;
+			break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+			break;
+		default: break;
+	}
 }
 
-void Game::clamp_player_to_screen(Entity *player)
+void Game::clamp_entity_to_screen(Entity *entity)
 {
-	if (player->x < 1) 			   player->x = 1;
-	if (player->x > SCREEN_WIDTH)  player->x = SCREEN_WIDTH - 1;
-	if (player->y < 1) 			   player->y = 1;
-	if (player->y > SCREEN_HEIGHT) player->y = SCREEN_HEIGHT -1;
+	if (entity->x < 1) 			   entity->x = 1;
+	if (entity->x > SCREEN_WIDTH)  entity->x = SCREEN_WIDTH - 1;
+	if (entity->y < 1) 			   entity->y = 1;
+	if (entity->y > SCREEN_HEIGHT) entity->y = SCREEN_HEIGHT -1;
 }
 
 void Game::update()
 {
+	if (entity_is_out_of_bounds(&player)) {
+		clamp_entity_to_screen(&player);
+	}
+	if (entity_is_out_of_bounds(&projectile)) {
+		destroy_entity(&projectile);
+	}
+}
+
+void Game::destroy_entity(Entity *entity)
+{
+	if (entity->count > 0) entity->count--;
 }
 
 void Game::draw()
 {
 	al_clear_to_color(al_map_rgb(0, 0, 0));
-	draw_player();
+	draw_entity();
 	al_flip_display();
 }
 
 
-void Game::draw_player()
+void Game::draw_entity() // TODO: Split draw functions for each entity member
 {
 	Vector2d player_vector(player.x, player.y);
 	Vector2d target_vector(target.x, target.y);
@@ -223,6 +237,12 @@ void Game::draw_player()
 		line.x += line.normal_x;
 		line.y += line.normal_y;
 		al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
+	}
+
+	if (projectile.count > 0) {
+		projectile.x += line.normal_x;
+		projectile.y += line.normal_y;
+		al_draw_pixel(projectile.x, projectile.y, al_map_rgb(255,0,255));
 	}
 
 	/*
@@ -258,12 +278,12 @@ float Game::undulate_color(float *color)
 	return *color;
 }
 
-bool Game::player_is_out_of_bounds(Entity *player_pos)
+bool Game::entity_is_out_of_bounds(Entity *entity_pos)
 {
-	if (player_pos->x < 1) return true;
-	else if (player_pos->x > SCREEN_WIDTH) return true;
-	else if (player_pos->y < 1) return true;
-	else if (player_pos->y > SCREEN_HEIGHT) return true;
+	if (entity_pos->x < 1) return true;
+	else if (entity_pos->x > SCREEN_WIDTH) return true;
+	else if (entity_pos->y < 1) return true;
+	else if (entity_pos->y > SCREEN_HEIGHT) return true;
 	else return false;
 }
 

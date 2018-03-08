@@ -12,7 +12,8 @@ public:
 	struct Entity {
 		float x, y;
 		float x_speed, y_speed;
-	}player, target;
+		int count;
+	}player, target, projectile;
 	
 	~Game();
 	Game(bool Is_running, bool Can_draw);
@@ -26,15 +27,16 @@ public:
 	void init_addons();
 	void handle_events();
 	void handle_key_press();
-	void handle_mouse_action(ALLEGRO_EVENT mouse_event, Entity *player_pos);
+	void handle_mouse_action();
 	void store_key_state();
 	void update();
+	void destroy_entity(Entity *entity);
 	void draw();
-	void draw_player();
+	void draw_entity();
 	float undulate_color(float *color);
 	void cleanup();
-	bool player_is_out_of_bounds(Entity *player_pos);
-	void clamp_player_to_screen(Entity *player);
+	bool entity_is_out_of_bounds(Entity *player_pos);
+	void clamp_entity_to_screen(Entity *entity);
 
 
 	int last_key_pressed;
