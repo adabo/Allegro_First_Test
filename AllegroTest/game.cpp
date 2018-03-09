@@ -4,6 +4,7 @@ Game::Game()
 	:	game_is_running(true),
 		can_redraw(false),
 		can_update(false),
+		can_draw_angle(false),
 		event_occurred(false)
 {
 	aimer.coords.x = player.coords.x = 200; 
@@ -103,17 +104,11 @@ void Game::handle_events()
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_TIMER:
-			// TODO change `can_redraw = true` to `if (can_redraw) draw_entities();`
-			// So set `can_redraw` on other states
-
 			// Check if the queue is empty before any updates or draw calls
-			
-			if (al_is_event_queue_empty(event_queue) && event_occurred) {
+			if (al_is_event_queue_empty(event_queue)) {
 				can_update = true;
 				can_redraw = true;
 				event_occurred = false;
-				//update_entities();
-				//draw_entity();
 			}
 			break;
 
@@ -279,12 +274,27 @@ void Game::draw()
 	}
 }
 
+void Game::draw_angle()
+{
+	float old_coords_x = aimer.coords.x;
+	float old_coords_y = aimer.coords.y;
+	for (int length = 0; length < 80; length++) {
+		old_coords_x += aimer.velocity.normal_x;
+		old_coords_y += aimer.velocity.normal_y;
+		al_draw_pixel(old_coords_x, old_coords_y , al_map_rgb(0, 180, 180));
+	}
+}
+
 void Game::draw_entity() // TODO: Split draw functions for each entity member
 {
 
+	Coords angle_coords{aimer.coords.x, aimer.coords.y};
+	// Draw aimer
 	for (int length = 0; length < 80; length++) {
 		aimer.coords.x += aimer.velocity.normal_x;
 		aimer.coords.y += aimer.velocity.normal_y;
+		get_velocity(angle_coords, Coords{(float)mouse_x, (float)mouse_y});
+		if (can_draw_angle) draw_angle();
 		al_draw_pixel(aimer.coords.x, aimer.coords.y , al_map_rgb(0, 255, 0));
 	}
 	aimer.coords.x = player.coords.x; // I don't know why, but 
@@ -292,6 +302,7 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 									  // works. If you put them in
 									  // update_aimer(), it breaks
 
+	// Draw projectile
 	if (projectile.count > 0) {
 		al_draw_pixel(projectile.coords.x,
 			          projectile.coords.y,
@@ -323,10 +334,12 @@ Vector2d Game::get_velocity(Coords _coords0,  Coords _coords1)
 	// (target.x - player.x, target.y - player.y)
 	Vector2d side_AB(entity0_vector, entity1_vector);
 
-	if (side_AB.x - side_AB.y > -5 && side_AB.x - side_AB.y < 5)
-		std::cout << "90 deg!" << std::endl;
-	else
-		std::cout << "not within view" << std::endl;
+	if (side_AB.x - side_AB.y > -15 && side_AB.x - side_AB.y < 15) {
+		can_draw_angle = true;
+	}
+	else can_draw_angle = false;
+	//else
+	//	std::cout << "not within view" << std::endl;
 
 	Vector2d velocity(side_AB.x, side_AB.y); // Magnitude, or hypotenuse
 	float distance = velocity.get_distance();

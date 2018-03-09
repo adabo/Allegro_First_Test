@@ -43,6 +43,7 @@ public:
 	void update();
 	void destroy_entity(Entity *entity);
 	void draw();
+	void draw_angle();
 	void draw_entity();
 	void draw_undulation();
 	Vector2d get_velocity(Coords _coords0,  Coords _coords1);
@@ -65,6 +66,7 @@ public:
 	bool game_is_running;
 	bool can_redraw;
 	bool can_update;
+	bool can_draw_angle;
 	bool event_occurred;
 	int return_value;
 	const float FPS = 60;
