@@ -9,6 +9,7 @@ public:
 	 * 		float x, y;
 	 * };
 	 */
+	Vector2d();
 	Vector2d(float _x, float _y);
 	Vector2d(Vector2d &_v0, Vector2d &_v1);
 	void print_vector2d() const;
