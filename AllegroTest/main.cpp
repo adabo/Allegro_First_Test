@@ -2,7 +2,7 @@
 
 int main(int argc, char *argv[])
 {
-	Game game(true, false);
+	Game game;
 
 	game.init_allegro();
 	game.init_timer();

@@ -23,7 +23,7 @@ class Game
 public:
 	Entity aimer, player, target, projectile;
 	~Game();
-	Game(bool Is_running, bool Can_draw);
+	Game();
 	void init_timer();
 	void init_timeout();
 	void init_display();
@@ -64,6 +64,8 @@ public:
 	bool t_is_pressed;
 	bool game_is_running;
 	bool can_redraw;
+	bool can_update;
+	bool event_occurred;
 	int return_value;
 	const float FPS = 60;
 	ALLEGRO_KEYBOARD_STATE current_state;

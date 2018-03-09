@@ -1,15 +1,17 @@
 #include "game.h"
 
-Game::Game(bool Is_running, bool Can_draw)
-	:	game_is_running(Is_running),
-		can_redraw(Can_draw)
+Game::Game()
+	:	game_is_running(true),
+		can_redraw(false),
+		can_update(false),
+		event_occurred(false)
 {
 	aimer.coords.x = player.coords.x = 200; 
 	aimer.coords.y = player.coords.y = 200;
 	player.x_speed = 10;
 	player.y_speed = 4;
-	projectile.x_speed = 10;
-	projectile.y_speed = 10;
+	projectile.x_speed = 8;
+	projectile.y_speed = 8;
 }
 
 Game::~Game()
@@ -101,18 +103,43 @@ void Game::handle_events()
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_TIMER:
+			// TODO change `can_redraw = true` to `if (can_redraw) draw_entities();`
+			// So set `can_redraw` on other states
+
 			// Check if the queue is empty before any updates or draw calls
+			
+			if (al_is_event_queue_empty(event_queue) && event_occurred) {
+				can_update = true;
+				can_redraw = true;
+				event_occurred = false;
+				//update_entities();
+				//draw_entity();
+			}
+			break;
+
+			/*
 			if (al_is_event_queue_empty(event_queue)) {
 				update_entities();
 				can_redraw = true; 
 			}
 			break;
+			*/
 		case ALLEGRO_EVENT_DISPLAY_CLOSE: game_is_running = false; break;
-		case ALLEGRO_EVENT_KEY_DOWN: save_key_state(); break;
-		case ALLEGRO_EVENT_KEY_UP: save_key_state(); break;
-		case ALLEGRO_EVENT_MOUSE_AXES: save_mouse_action(); break;
-		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN: save_mouse_action(); break;
-		case ALLEGRO_EVENT_MOUSE_BUTTON_UP: save_mouse_action(); break;
+		case ALLEGRO_EVENT_KEY_DOWN:
+			  save_key_state();
+			  event_occurred = true; break;
+		case ALLEGRO_EVENT_KEY_UP:
+			  save_key_state();
+			  event_occurred = true; break;
+		case ALLEGRO_EVENT_MOUSE_AXES:
+			  save_mouse_action();
+			  event_occurred = true; break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN:
+			  save_mouse_action();
+			  event_occurred = true; break;
+		case ALLEGRO_EVENT_MOUSE_BUTTON_UP:
+			  save_mouse_action();
+			  event_occurred = true; break;
 		default: break;
 	}
 }
@@ -202,6 +229,12 @@ void Game::update_projectile()
 			                               Coords{(float)mouse_x,
 			                                      (float)mouse_y});
 	}
+	else if (projectile.count > 0 ) {
+		projectile.coords.x += projectile.velocity.normal_x * projectile.x_speed;
+		projectile.coords.y += projectile.velocity.normal_y * projectile.y_speed;
+		//projectile.coords.x += projectile.velocity.normal_x;
+		//projectile.coords.y += projectile.velocity.normal_y;
+	}
 
 	if (entity_is_out_of_bounds(&projectile.coords,0)) destroy_entity(&projectile);
 }
@@ -224,6 +257,10 @@ void Game::clamp_entity_to_screen(Coords *entity_coords, int offset)
 
 void Game::update()
 {
+	if (can_update) {
+		update_entities();
+		can_update = false;
+	}
 }
 
 void Game::destroy_entity(Entity *entity)
@@ -238,6 +275,7 @@ void Game::draw()
 		al_clear_to_color(al_map_rgb(0, 0, 0));
 		draw_entity();
 		al_flip_display();
+		can_redraw = false;
 	}
 }
 
@@ -255,14 +293,11 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 									  // update_aimer(), it breaks
 
 	if (projectile.count > 0) {
-		projectile.coords.x += projectile.velocity.normal_x;
-		projectile.coords.y += projectile.velocity.normal_y;
 		al_draw_pixel(projectile.coords.x,
 			          projectile.coords.y,
 			          al_map_rgb(255,0,255));
 	}
 
-	can_redraw = false;
 	//draw_undulation();
 }
 
@@ -287,6 +322,12 @@ Vector2d Game::get_velocity(Coords _coords0,  Coords _coords1)
 	// This Vector2d overload takes two vectors and subtracts their components
 	// (target.x - player.x, target.y - player.y)
 	Vector2d side_AB(entity0_vector, entity1_vector);
+
+	if (side_AB.x - side_AB.y > -5 && side_AB.x - side_AB.y < 5)
+		std::cout << "90 deg!" << std::endl;
+	else
+		std::cout << "not within view" << std::endl;
+
 	Vector2d velocity(side_AB.x, side_AB.y); // Magnitude, or hypotenuse
 	float distance = velocity.get_distance();
 	velocity.get_normal(distance);
