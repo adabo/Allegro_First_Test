@@ -22,9 +22,7 @@ void Game::init_allegro()
 		std::cout << stderr << " Failed to initialize allegro.\n";
 		return_value =  1;
 	}
-	else {
-		std::cout << stderr << " al_init success.\n";
-	}
+	else std::cout << stderr << " al_init success.\n";
 }
 
 void Game::init_addons()
@@ -33,24 +31,19 @@ void Game::init_addons()
 		std::cout << stderr << " Failed to initialize primitives addon.\n";
 		return_value =  1;
 	}
-	else {
-		std::cout << stderr << " al_init_primitives_addon Success.";
-	}
+	else std::cout << stderr << " al_init_primitives_addon Success.";
 
 	if (!al_install_keyboard()) {
 		std::cout << stderr << " Failed to install keyboard.\n";
 		return_value =  1;
 	}
-	else {
-		std::cout << stderr << " al_install_keyboard() Success.";
-	}
+	else std::cout << stderr << " al_install_keyboard() Success.";
+
 	if (!al_install_mouse()) {
 		std::cout << stderr << " Failed to install mouse.\n";
 		return_value =  1;
 	}
-	else {
-		std::cout << stderr << " al_install_mouse() Success.";
-	}
+	else std::cout << stderr << " al_install_mouse() Success.";
 }
 
 void Game::init_timer()
@@ -60,9 +53,7 @@ void Game::init_timer()
 		std::cout << stderr << " Failed to create timer.\n";
 		return_value =  1;
 	}
-	else {
-		std::cout << stderr << " al_create_timer success.\n";
-	}
+	else std::cout << stderr << " al_create_timer success.\n";
 }
 
 void Game::init_display()
@@ -72,9 +63,7 @@ void Game::init_display()
 		std::cout << stderr << " Failed to create display.\n";
 		return_value = 1;
 	}
-	else {
-		std::cout << stderr << " al_create_display success.\n";
-	}
+	else std::cout << stderr << " al_create_display success.\n";
 }
 
 void Game::create_event_queue()
@@ -84,9 +73,7 @@ void Game::create_event_queue()
 		std::cout << stderr << " Failed to create event queue.";
 		return_value = 1;
 	}
-	else {
-		std::cout << stderr << "al_create_event_queue success.\n";
-	}
+	else std::cout << stderr << "al_create_event_queue success.\n";
 }
 
 void Game::register_event_sources()
@@ -114,6 +101,7 @@ void Game::handle_events()
 
 	switch (event.type) {
 		case ALLEGRO_EVENT_TIMER:
+			// Check if the queue is empty before any updates or draw calls
 			if (al_is_event_queue_empty(event_queue)) {
 				update_entities();
 				can_redraw = true; 
@@ -245,9 +233,12 @@ void Game::destroy_entity(Entity *entity)
 
 void Game::draw()
 {
-	al_clear_to_color(al_map_rgb(0, 0, 0));
-	draw_entity();
-	al_flip_display();
+
+	if (can_redraw) {
+		al_clear_to_color(al_map_rgb(0, 0, 0));
+		draw_entity();
+		al_flip_display();
+	}
 }
 
 void Game::draw_entity() // TODO: Split draw functions for each entity member
@@ -271,6 +262,7 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 			          al_map_rgb(255,0,255));
 	}
 
+	can_redraw = false;
 	//draw_undulation();
 }
 
