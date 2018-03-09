@@ -44,6 +44,7 @@ public:
 	void destroy_entity(Entity *entity);
 	void draw();
 	void draw_entity();
+	void draw_undulation();
 	Vector2d get_velocity(Coords _coords0,  Coords _coords1);
 	float undulate_color(float *color);
 	void cleanup();

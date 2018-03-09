@@ -113,11 +113,16 @@ void Game::handle_events()
 	al_wait_for_event(event_queue, &event);
 
 	switch (event.type) {
-		case ALLEGRO_EVENT_TIMER: update_entities(); can_redraw = true; break;
+		case ALLEGRO_EVENT_TIMER:
+			if (al_is_event_queue_empty(event_queue)) {
+				update_entities();
+				can_redraw = true; 
+			}
+			break;
 		case ALLEGRO_EVENT_DISPLAY_CLOSE: game_is_running = false; break;
 		case ALLEGRO_EVENT_KEY_DOWN: save_key_state(); break;
 		case ALLEGRO_EVENT_KEY_UP: save_key_state(); break;
-		case ALLEGRO_EVENT_MOUSE_AXES: save_mouse_action(); return;
+		case ALLEGRO_EVENT_MOUSE_AXES: save_mouse_action(); break;
 		case ALLEGRO_EVENT_MOUSE_BUTTON_DOWN: save_mouse_action(); break;
 		case ALLEGRO_EVENT_MOUSE_BUTTON_UP: save_mouse_action(); break;
 		default: break;
@@ -189,10 +194,9 @@ void Game::update_player()
 
 void Game::update_aimer()
 {
-	aimer.velocity.x = aimer.coords.x = player.coords.x;
-	aimer.velocity.y = aimer.coords.y = player.coords.y;
-
-	get_velocity(aimer.coords, target.coords);
+	//aimer.coords.x = player.coords.x;
+	//aimer.coords.y = player.coords.y;
+	aimer.velocity = get_velocity(aimer.coords, Coords{(float)mouse_x, (float)mouse_y});
 
 	int offset = 40;
 	if (entity_is_out_of_bounds(&aimer.coords, offset))
@@ -206,13 +210,10 @@ void Game::update_projectile()
 		projectile.count++;
 		projectile.coords.x = player.coords.x;
 		projectile.coords.y = player.coords.y;
-		float mx = mouse_x;
-		float my = mouse_y;
-		projectile.velocity = get_velocity(projectile.coords, Coords{ mx, my });
-		//target.coords.x = mouse_x;
-		//target.coords.y = mouse_y;
+		projectile.velocity = get_velocity(projectile.coords,
+			                               Coords{(float)mouse_x,
+			                                      (float)mouse_y});
 	}
-
 
 	if (entity_is_out_of_bounds(&projectile.coords,0)) destroy_entity(&projectile);
 }
@@ -251,33 +252,16 @@ void Game::draw()
 
 void Game::draw_entity() // TODO: Split draw functions for each entity member
 {
-	Vector2d aimer_vector(aimer.coords.x, aimer.coords.y);
-	Vector2d target_vector(target.coords.x, target.coords.y);
 
-	// If you imagine cartesian, x -> and y ^ of a triangle
-	// This Vector2d overload takes two vectors and subtracts their components
-	// (target.coords.x - aimer.coords.x, target.coords.y - aimer.coords.y)
-	Vector2d side_AB(aimer_vector, target_vector);
-	Vector2d line(side_AB.x, side_AB.y); // Magnitude, or hypotenuse
-	float distance = line.get_distance();
-	line.get_normal(distance);
-
-	// Set line's origin to the aimer's coords since that's where we want the
-	// line to start from, like a projectile
-	line.x = aimer.coords.x;
-	line.y = aimer.coords.y;
-
-	// Draw the line extending from aimer origin to target
-	// MOVE THIS CODE TO AIMER UPDATE FUNCTION
-	// MOVE THIS CODE TO AIMER UPDATE FUNCTION
-	// MOVE THIS CODE TO AIMER UPDATE FUNCTION
-	// MOVE THIS CODE TO AIMER UPDATE FUNCTION
-	// MOVE THIS CODE TO AIMER UPDATE FUNCTION
 	for (int length = 0; length < 80; length++) {
-		line.x += line.normal_x;
-		line.y += line.normal_y;
-		al_draw_pixel(line.x, line.y , al_map_rgb(0, 255, 0));
+		aimer.coords.x += aimer.velocity.normal_x;
+		aimer.coords.y += aimer.velocity.normal_y;
+		al_draw_pixel(aimer.coords.x, aimer.coords.y , al_map_rgb(0, 255, 0));
 	}
+	aimer.coords.x = player.coords.x; // I don't know why, but 
+	aimer.coords.y = player.coords.y; // assigning these here
+									  // works. If you put them in
+									  // update_aimer(), it breaks
 
 	if (projectile.count > 0) {
 		projectile.coords.x += projectile.velocity.normal_x;
@@ -287,7 +271,11 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 			          al_map_rgb(255,0,255));
 	}
 
-	/*
+	//draw_undulation();
+}
+
+void Game::draw_undulation()
+{
 	static float red;
 	for (int shape_width = 0; shape_width < 200; shape_width++) {
 		undulate_color(&red);
@@ -295,7 +283,6 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 			al_draw_pixel((player.coords.x + shape_width) + i, player.coords.y + i, al_map_rgb(red, red, 255));
 		}
 	}
-	*/
 }
 
 Vector2d Game::get_velocity(Coords _coords0,  Coords _coords1)
