@@ -11,9 +11,20 @@ struct Coords {
 	float x, y;
 };
 
+struct Shape {
+	int width, height;
+	int left, right, top, bot;
+}; 
+
 struct Entity {
+	Entity();
+	void set_sides(Entity &_ent, int _x, int _y, int _w, int _h);
+	void set_sides(int _x, int _y, int _w, int _h);
+	bool operator>(const Entity &entity) const;
+
 	Vector2d velocity;
 	Coords coords;
+	Shape shape;
 	float x_speed, y_speed;
 	int count;
 };
@@ -38,14 +49,18 @@ public:
 	void update_projectile();
 	void update_aimer();
 	void update_target();
+	void check_collision();
+	void remove_dead_entities();
 	void save_mouse_action();
 	void save_key_state();
 	void update();
 	void destroy_entity(Entity *entity);
 	void draw();
 	void draw_entity();
+	void draw_target();
 	void draw_undulation();
-	Vector2d get_velocity(Coords _coords0,  Coords _coords1);
+	bool entities_collided(Entity &_entity0, Entity &_entity1);
+	Vector2d get_velocity(Coords &_coords0,  Coords _coords1);
 	float undulate_color(float *color);
 	void cleanup();
 	bool entity_is_out_of_bounds(Coords *player_coords, int _offset);
@@ -62,6 +77,7 @@ public:
 	bool mouse_button_is_down;
 	bool t_toggle;
 	bool t_is_pressed;
+	bool projectile_is_dead;
 	bool game_is_running;
 	bool can_redraw;
 	int return_value;
