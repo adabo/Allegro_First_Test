@@ -3,17 +3,27 @@
 Game::Game(bool Is_running, bool Can_draw)
 	:	projectile_is_dead(true),
 	  	game_is_running(Is_running),
+		can_update(false),
 		can_redraw(Can_draw)
 {
-	aimer.set_sides(aimer, 200, 200, 1, 1);
-	player.set_sides(player, 200, 200, 1, 1);
-	target.set_sides(target, 200, 500, 50, 50);
-	projectile.set_sides(projectile, 200, 200, 1, 1);
+	aimer.coord = {200, 200};
+	aimer.dimension = {2, 2};
+	aimer.set_sides(aimer, aimer.coord, aimer.dimension);
+
+	player.coord = {200, 200};
+	player.dimension = {2, 2};
+	player.set_sides(player, player.coord, player.dimension);
+
+	target.coord = {200, 500};
+	target.dimension = {50, 50};
+	target.set_sides(target, target.coord, target.dimension);
+
 	player.x_speed = 10;
 	player.y_speed = 4;
 	projectile.x_speed = 5;
 	projectile.y_speed = 5;
 }
+
 Game::~Game()
 {
 }
@@ -22,27 +32,44 @@ Entity::Entity()
 {
 }
 
-void Entity::set_sides(Entity &_ent, int _x, int _y, int _w, int _h)
+void Entity::set_sides(Entity &_ent, Coords _origin, Dimension _dimension)
 {
-	_ent.coords.x = _x, _ent.coords.y = _y, _ent.shape.width = _w, _ent.shape.height = _h;
-	shape.top = (_x + (_x + _w)) + (_y + _y);
-	shape.bot = (_x + (_x + _w)) + ((_y + _h) + (_y + _h));
-	shape.left = (_x + _x) + (_x + (_x + _h));
-	shape.right = ((_x + _w) + _y) + (_y + (_y + _h));
+	_ent.coord.x = _origin.x, _ent.coord.y = _origin.y;
+	_ent.dimension.width = _dimension.width;
+	_ent.dimension.height = _dimension.height;
+	
+	// Add the x/y components of each side
+	// eg. (x1, y1) + (x2, y2) = (x1 + x2) + (y1 + y2)
+	dimension.top = (_origin.x + (_origin.x + _dimension.width)) +
+					(_origin.y + _origin.y);
+	dimension.bot = (_origin.x + (_origin.x + _dimension.width)) +
+					((_origin.y + _dimension.height) +
+					 (_origin.y + _dimension.height));
+	dimension.left = (_origin.x + _origin.x) +
+					 (_origin.y + (_origin.y + _dimension.height));
+	dimension.right = ((_origin.x + _dimension.width) + 
+					  (_origin.x + _dimension.width)) +
+					  (_origin.y + (_origin.y + dimension.height));
 }
 
-void Entity::set_sides(int _x, int _y, int _w, int _h)
+void Entity::set_sides(Coords _origin, Dimension _dimension)
 {
-	shape.top = (_x + (_x + _w)) + (_y + _y);
-	shape.bot = (_x + (_x + _w)) + ((_y + _h) + (_y + _h));
-	shape.left = (_x + _x) + (_x + (_x + _h));
-	shape.right = ((_x + _w) + _y) + (_y + (_y + _h));
+	dimension.top = (_origin.x + (_origin.x + _dimension.width)) +
+					(_origin.y + _origin.y);
+	dimension.bot = (_origin.x + (_origin.x + _dimension.width)) +
+					((_origin.y + _dimension.height) +
+					 (_origin.y + _dimension.height));
+	dimension.left = (_origin.x + _origin.x) +
+					 (_origin.y + (_origin.y + _dimension.height));
+	dimension.right = ((_origin.x + _dimension.width) + 
+					  (_origin.x + _dimension.width)) +
+					  (_origin.y + (_origin.y + dimension.height));
 }
 
 bool Entity::operator>(const Entity &rhs) const
 {
-	return (shape.left < rhs.shape.right && shape.right > rhs.shape.left &&
-			shape.bot > rhs.shape.top && shape.top < rhs.shape.bot);
+	return (dimension.left < rhs.dimension.right && dimension.right > rhs.dimension.left &&
+			dimension.bot > rhs.dimension.top && dimension.top < rhs.dimension.bot);
 }
 
 void Game::init_allegro()
@@ -52,6 +79,31 @@ void Game::init_allegro()
 		return_value =  1;
 	}
 	else std::cout << stderr << " al_init success.\n";
+}
+
+void Game::init_timer()
+{
+	timer = al_create_timer(1.0 / FPS);
+	if (!timer) {
+		std::cout << stderr << " Failed to create timer.\n";
+		return_value =  1;
+	}
+	else std::cout << stderr << " al_create_timer success.\n";
+}
+
+void Game::start_timer()
+{
+	al_start_timer(timer);
+}
+
+void Game::init_display()
+{
+	display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+	if (!display) {
+		std::cout << stderr << " Failed to create display.\n";
+		return_value = 1;
+	}
+	else std::cout << stderr << " al_create_display success.\n";
 }
 
 void Game::init_addons()
@@ -75,26 +127,6 @@ void Game::init_addons()
 	else std::cout << stderr << " al_install_mouse() Success.";
 }
 
-void Game::init_timer()
-{
-	timer = al_create_timer(1.0 / FPS);
-	if (!timer) {
-		std::cout << stderr << " Failed to create timer.\n";
-		return_value =  1;
-	}
-	else std::cout << stderr << " al_create_timer success.\n";
-}
-
-void Game::init_display()
-{
-	display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-	if (!display) {
-		std::cout << stderr << " Failed to create display.\n";
-		return_value = 1;
-	}
-	else std::cout << stderr << " al_create_display success.\n";
-}
-
 void Game::create_event_queue()
 {
 	event_queue = al_create_event_queue();
@@ -113,11 +145,6 @@ void Game::register_event_sources()
 	al_register_event_source(event_queue, al_get_mouse_event_source());
 }
 
-void Game::start_timer()
-{
-	al_start_timer(timer);
-}
-
 void Game::init_timeout()
 {
 	al_init_timeout(&timeout, 0.06);
@@ -132,7 +159,7 @@ void Game::handle_events()
 		case ALLEGRO_EVENT_TIMER:
 			// Check if the queue is empty before any updates or draw calls
 			if (al_is_event_queue_empty(event_queue)) {
-				update_entities();
+				can_update = true;
 				can_redraw = true; 
 			}
 			break;
@@ -144,16 +171,6 @@ void Game::handle_events()
 		case ALLEGRO_EVENT_MOUSE_BUTTON_UP: save_mouse_action(); break;
 		default: break;
 	}
-}
-
-void Game::update_entities()
-{
-	update_player();
-	update_projectile();
-	update_aimer();
-	update_target();
-	check_collision();
-	remove_dead_entities();
 }
 
 void Game::save_key_state()
@@ -198,52 +215,76 @@ void Game::save_mouse_action()
 	}
 }
 
+void Game::update()
+{
+	if (can_update) {
+		update_entities();
+		can_update = false;
+	}
+}
+
+void Game::update_entities()
+{
+	update_player();
+	update_projectile();
+	update_aimer();
+	update_target();
+	check_collision();
+	remove_dead_entities();
+}
+
 void Game::update_player()
 {
-	if (w_key_is_down) player.coords.y -= player.y_speed;
-	if (s_key_is_down) player.coords.y += player.y_speed;
-	if (a_key_is_down) player.coords.x -= player.x_speed;
-	if (d_key_is_down) player.coords.x += player.x_speed;
+	if (w_key_is_down) player.coord.y -= player.y_speed;
+	if (s_key_is_down) player.coord.y += player.y_speed;
+	if (a_key_is_down) player.coord.x -= player.x_speed;
+	if (d_key_is_down) player.coord.x += player.x_speed;
 	if (esc_key_is_down) game_is_running = false;
 	//if (t_was_pressed) t_toggle = !t_toggle;
 
-	if (entity_is_out_of_bounds(&player.coords, 0))
-		clamp_entity_to_screen(&player.coords, 0);
+	if (entity_is_out_of_bounds(&player.coord, 0))
+		clamp_entity_to_screen(&player.coord, 0);
 
-}
-
-void Game::update_aimer()
-{
-	//aimer.coords.x = player.coords.x;
-	//aimer.coords.y = player.coords.y;
-	aimer.velocity = get_velocity(aimer.coords, Coords{(float)mouse_x, (float)mouse_y});
-
-	int offset = 40;
-	if (entity_is_out_of_bounds(&aimer.coords, offset))
-		clamp_entity_to_screen(&aimer.coords, offset);
 }
 
 void Game::update_projectile()
 {
 	// Spawn a projectile if the mouse button was pressed
 	if (mouse_button_is_down) {
+		mouse_button_is_down = false;
 		projectile.count++;
-		projectile.set_sides(projectile, player.coords.x, player.coords.y, 1, 1 );
-		projectile.velocity = get_velocity(projectile.coords,
-			                               Coords{(float)mouse_x,
-			                                      (float)mouse_y});
-	}
-	else {
-		projectile.coords.x += projectile.velocity.normal_x *
-							   projectile.x_speed;
-		projectile.coords.y += projectile.velocity.normal_y *
-							   projectile.y_speed;
-		projectile.set_sides(projectile.coords.x, projectile.coords.y,
-							 projectile.shape.width, projectile.shape.height);
-	}
+		if (projectile.count > 10)
+			std::cout << projectile.count << std::endl;
+		projectile.set_sides(projectile, player.coord, projectile.dimension);
+		projectile.velocity = get_vector(projectile.coord,
+			Coords{ (float)mouse_x,
+				   (float)mouse_y }, 80);
+	} // Continue update on living projectile
+	else if (projectile.count > 0) {
+		projectile.coord.x += projectile.velocity.normal_x *
+			projectile.x_speed;
+		projectile.coord.y += projectile.velocity.normal_y *
+			projectile.y_speed;
+			projectile.set_sides(projectile.coord, projectile.dimension);
 
-	if (entity_is_out_of_bounds(&projectile.coords,0))
-		destroy_entity(&projectile);
+		if (entity_is_out_of_bounds(&projectile.coord, 0)) {
+			std::cout << "OUT OF BOUNDS" << std::endl;
+			destroy_entity(&projectile);
+		}
+	}
+}
+
+void Game::update_aimer()
+{
+	//aimer.coord.x = player.coord.x;
+	//aimer.coord.y = player.coord.y;
+	aimer.velocity = get_vector(aimer.coord, Coords{(float)mouse_x, (float)mouse_y}, 0);
+
+	int offset = 40;
+	if (entity_is_out_of_bounds(&aimer.coord, offset)) {
+		clamp_entity_to_screen(&aimer.coord, offset);
+		std::cout << "aimer oob" << std::endl;
+	}
 }
 
 void Game::update_target()
@@ -262,29 +303,39 @@ void Game::check_collision()
 		}
 }
 
+bool Game::entity_is_out_of_bounds(Coords *entity_coord,int _offset)
+{
+	if (entity_coord->x < 1) return true;
+	else if (entity_coord->x > SCREEN_WIDTH) return true;
+	else if (entity_coord->y < 1) return true;
+	else if (entity_coord->y > SCREEN_HEIGHT) return true;
+	else return false;
+}
+
+void Game::clamp_entity_to_screen(Coords *entity_coord, int offset)
+{
+	if (entity_coord->x < 1) 			   entity_coord->x = 1;
+	if (entity_coord->x > SCREEN_WIDTH)  entity_coord->x = SCREEN_WIDTH - 1;
+	if (entity_coord->y < 1) 			   entity_coord->y = 1;
+	if (entity_coord->y > SCREEN_HEIGHT) entity_coord->y = SCREEN_HEIGHT -1;
+}
+
+bool Game::entities_collided(Entity &_entity0, Entity &_entity1)
+{
+	return _entity0 > _entity1;
+}
+
+void Game::destroy_entity(Entity *entity)
+{
+	if (entity->count > 0) entity->count--;
+}
+
 void Game::remove_dead_entities()
 {
 	if (projectile_is_dead) {
 		destroy_entity(&projectile);
 		projectile_is_dead = false;
 	}
-}
-
-void Game::clamp_entity_to_screen(Coords *entity_coords, int offset)
-{
-	if (entity_coords->x < 1) 			   entity_coords->x = 1;
-	if (entity_coords->x > SCREEN_WIDTH)  entity_coords->x = SCREEN_WIDTH - 1;
-	if (entity_coords->y < 1) 			   entity_coords->y = 1;
-	if (entity_coords->y > SCREEN_HEIGHT) entity_coords->y = SCREEN_HEIGHT -1;
-}
-
-void Game::update()
-{
-}
-
-void Game::destroy_entity(Entity *entity)
-{
-	if (entity->count > 0) entity->count--;
 }
 
 void Game::draw()
@@ -300,21 +351,8 @@ void Game::draw()
 void Game::draw_entity() // TODO: Split draw functions for each entity member
 {
 	draw_target();
-
-	for (int length = 0; length < 80; length++) {
-		aimer.coords.x += aimer.velocity.normal_x;
-		aimer.coords.y += aimer.velocity.normal_y;
-		al_draw_pixel(aimer.coords.x, aimer.coords.y , al_map_rgb(0, 255, 0));
-	}
-	aimer.coords.x = player.coords.x; // I don't know why, but 
-	aimer.coords.y = player.coords.y; // assigning these here
-									  // works. If you put them in
-									  // update_aimer(), it breaks
-
-	if (projectile.count > 0) {
-		al_draw_pixel(projectile.coords.x, projectile.coords.y,
-			          al_map_rgb(255,0,255));
-	}
+	draw_aimer();
+	draw_projectile();
 
 	can_redraw = false;
 	//draw_undulation();
@@ -322,39 +360,62 @@ void Game::draw_entity() // TODO: Split draw functions for each entity member
 
 void Game::draw_target()
 {
-	al_draw_filled_rectangle(target.coords.x,
-			                 target.coords.y,
-			                 target.coords.x + target.shape.width,
-		                     target.coords.y + target.shape.height,
+	al_draw_filled_rectangle(target.coord.x,
+			                 target.coord.y,
+			                 target.coord.x + target.dimension.width,
+		                     target.coord.y + target.dimension.height,
 			                 al_map_rgb(150, 150, 0));
+}
+
+void Game::draw_aimer()
+{
+	for (int length = 0; length < 80; length++) {
+		aimer.coord.x += aimer.velocity.normal_x;
+		aimer.coord.y += aimer.velocity.normal_y;
+		al_draw_pixel(aimer.coord.x, aimer.coord.y , al_map_rgb(0, 255, 0));
+	}
+	aimer.coord.x = player.coord.x; // I don't know why, but 
+	aimer.coord.y = player.coord.y; // assigning these here
+									  // works. If you put them in
+									  // update_aimer(), it breaks
+}
+
+void Game::draw_projectile()
+{
+	if (projectile.count > 0) {
+		al_draw_pixel(projectile.coord.x, projectile.coord.y,
+			          al_map_rgb(255,0,255));
+	}
 }
 
 void Game::draw_undulation()
 {
 	static float red;
-	for (int shape_width = 0; shape_width < 200; shape_width++) {
+	for (int dimension_width = 0; dimension_width < 200; dimension_width++) {
 		undulate_color(&red);
 		for (int i = 0; i < 40; i++) {
-			al_draw_pixel((player.coords.x + shape_width) + i, player.coords.y + i, al_map_rgb(red, red, 255));
+			al_draw_pixel((player.coord.x + dimension_width) + i, player.coord.y + i, al_map_rgb(red, red, 255));
 		}
 	}
 }
 
-bool Game::entities_collided(Entity &_entity0, Entity &_entity1)
-{
-	return _entity0 > _entity1;
-}
-
-Vector2d Game::get_velocity(Coords &_coords0,  Coords _coords1)
+Vector2d Game::get_vector(Coords &_start,  Coords _end, int _offset)
 {
 
-	Vector2d entity0_vector(_coords0.x, _coords0.y); // Make two vectors
-	Vector2d entity1_vector(_coords1.x, _coords1.y); // ----------------
-	Vector2d side_AB(entity0_vector, entity1_vector); // Find their base and height (x,y)
-	Vector2d velocity(side_AB.x, side_AB.y); // Magnitude, or hypotenuse
+	Vector2d start_vector(_start.x, _start.y); // Make two vectors
+	Vector2d end_vector(_end.x, _end.y); // ----------------
+	Vector2d side(start_vector, end_vector); // Find their base and height (x,y)
+	Vector2d velocity(side.x, side.y); // Magnitude, or hypotenuse
 	float distance = velocity.get_distance(); // Find the displacement
 	velocity.get_normal(distance); // Normalize the vector
 
+	// Apply offset
+	// TODO Find formula for getting new offset coords
+	while (_offset) {
+		_start.x += velocity.normal_x;
+		_start.y += velocity.normal_y;
+		_offset--;
+	}
 	return velocity;
 }
 
@@ -378,15 +439,6 @@ float Game::undulate_color(float *color)
 	}
 
 	return *color;
-}
-
-bool Game::entity_is_out_of_bounds(Coords *entity_coords,int _offset)
-{
-	if (entity_coords->x < 1) return true;
-	else if (entity_coords->x > SCREEN_WIDTH) return true;
-	else if (entity_coords->y < 1) return true;
-	else if (entity_coords->y > SCREEN_HEIGHT) return true;
-	else return false;
 }
 
 void Game::cleanup()
